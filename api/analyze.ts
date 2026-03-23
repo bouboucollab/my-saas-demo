@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-5",
         max_tokens: 1500,
         system: `Tu es un expert commercial B2B senior de haut niveau. Analyse cet appel commercial et retourne UNIQUEMENT un JSON valide (sans backticks) avec cette structure exacte:
 {
