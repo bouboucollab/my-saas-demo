@@ -1,3 +1,13 @@
 {
-  "framework": "vite"
+  "framework": "vite",
+  "functions": {
+    "API/**/*.ts": {
+      "runtime": "@vercel/node@3.0.0"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/transcribe", "destination": "/API/transcribe.ts" },
+    { "source": "/api/analyze", "destination": "/API/analyze.ts" },
+    { "source": "/api/email", "destination": "/API/email.ts" }
+  ]
 }
