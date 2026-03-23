@@ -59,7 +59,7 @@ const ScoreRing = ({value, max=10, color, size=80}) => {
 
 const Bar = ({v, max=100, color}) => (
   <div style={{height:4,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden",marginTop:8}}>
-    <div style={{height:"100%",borderRadius:2,background:color,width:`${Math.min(100,(v/max)*100}%`,transition:"width 1.2s cubic-bezier(.16,1,.3,1)"}}/>
+    width:`${Math.min(100,(v/max)*100)}%`
   </div>
 );
 
