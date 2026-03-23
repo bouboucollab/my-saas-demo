@@ -44,6 +44,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const parsed = JSON.parse(raw);
     res.status(200).json(parsed);
   } catch (e) {
-    res.status(500).json({ error: "Erreur analyse IA" });
+    res.status(500).json({ error: String(e) });
   }
 }
