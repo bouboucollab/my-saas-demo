@@ -1,353 +1,372 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import ReactDOM from "react-dom/client";
 
 const KF = `
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
+body{background:#05050A;color:#ECECF1;font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:'ss01','ss02'}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-@keyframes barGrow{from{width:0}to{width:var(--w)}}
-@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-.fu{animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both}
-.fu2{animation:fadeUp .4s .1s cubic-bezier(.16,1,.3,1) both}
-.fu3{animation:fadeUp .4s .2s cubic-bezier(.16,1,.3,1) both}
-.fu4{animation:fadeUp .4s .3s cubic-bezier(.16,1,.3,1) both}
-body{background:#080810;color:#E8E8F2;font-family:'DM Mono',monospace}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes dash{to{stroke-dashoffset:0}}
+.a1{animation:fu .5s cubic-bezier(.16,1,.3,1) both}
+.a2{animation:fu .5s .08s cubic-bezier(.16,1,.3,1) both}
+.a3{animation:fu .5s .16s cubic-bezier(.16,1,.3,1) both}
+.a4{animation:fu .5s .24s cubic-bezier(.16,1,.3,1) both}
+.ai{animation:fi .35s ease both}
+.ch{transition:border-color .2s,background .2s,transform .2s,box-shadow .2s}
+.ch:hover{border-color:rgba(255,255,255,.12)!important;transform:translateY(-1px);box-shadow:0 8px 32px rgba(0,0,0,.4)!important}
+.tb{transition:color .15s,border-color .15s}
 `;
 
-const C = {
-  bg:"#080810", s1:"#0E0E1A", s2:"#141422", s3:"#1A1A2E",
-  border:"rgba(255,255,255,0.06)", borderHi:"rgba(255,255,255,0.14)",
-  accent:"#FF4D1C", accentDim:"rgba(255,77,28,0.12)", accentBorder:"rgba(255,77,28,0.35)",
-  gold:"#FFB547", goldDim:"rgba(255,181,71,0.1)", goldBorder:"rgba(255,181,71,0.3)",
-  green:"#00E599", greenDim:"rgba(0,229,153,0.1)", greenBorder:"rgba(0,229,153,0.3)",
-  blue:"#4D9EFF", blueDim:"rgba(77,158,255,0.1)", blueBorder:"rgba(77,158,255,0.3)",
-  text:"#E8E8F2", muted:"#6B6B8A", dim:"#2A2A3E",
+const T = {
+  bg:"#05050A",
+  s1:"#0A0A12",
+  s2:"#0F0F18",
+  b:"rgba(255,255,255,0.055)",
+  bm:"rgba(255,255,255,0.09)",
+  bh:"rgba(255,255,255,0.15)",
+  i:"#7C3AED",
+  ig:"linear-gradient(135deg,#7C3AED 0%,#5B21B6 100%)",
+  id:"rgba(124,58,237,0.1)",
+  ib:"rgba(124,58,237,0.25)",
+  g:"#059669",
+  gd:"rgba(5,150,105,0.1)",
+  gb:"rgba(5,150,105,0.22)",
+  a:"#D97706",
+  ad:"rgba(217,119,6,0.1)",
+  ab:"rgba(217,119,6,0.22)",
+  r:"#DC2626",
+  rd:"rgba(220,38,38,0.08)",
+  rb:"rgba(220,38,38,0.2)",
+  t1:"#ECECF1",
+  t2:"#9090A0",
+  t3:"#50505F",
 };
 
-const card = (x={}) => ({
-  background:C.s1, border:`1px solid ${C.border}`,
-  borderRadius:12, padding:"20px 24px", ...x
-});
+const c=(x={})=>({background:T.s1,border:`1px solid ${T.b}`,borderRadius:12,padding:"22px 26px",...x});
 
-const Tag = ({children,color,bg,border}) => (
-  <span style={{display:"inline-block",fontSize:11,padding:"4px 12px",background:bg,border:`1px solid ${border}`,color,borderRadius:6,marginRight:8,marginBottom:8,fontFamily:"'DM Mono',monospace",letterSpacing:"0.02em"}}>{children}</span>
+const Pip=({color,bg,bd,children})=>(
+  <span className="ch" style={{display:"inline-flex",alignItems:"center",fontSize:11.5,padding:"3px 10px",background:bg,border:`1px solid ${bd}`,color,borderRadius:6,marginRight:7,marginBottom:7,fontWeight:500,letterSpacing:"0.01em",cursor:"default"}}>{children}</span>
 );
 
-const SH = ({children}) => (
-  <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
-    <span style={{fontSize:10,letterSpacing:"0.15em",textTransform:"uppercase",color:C.muted,whiteSpace:"nowrap",fontFamily:"'Syne',sans-serif",fontWeight:600}}>{children}</span>
-    <div style={{flex:1,height:"1px",background:C.border}}/>
+const Div=({label,accent=false})=>(
+  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+    {accent&&<div style={{width:2,height:14,background:T.ig,borderRadius:1}}/>}
+    <span style={{fontSize:10.5,letterSpacing:"0.13em",textTransform:"uppercase",color:T.t3,fontWeight:500}}>{label}</span>
+    <div style={{flex:1,height:"1px",background:T.b}}/>
   </div>
 );
 
-const ScoreRing = ({value, max=10, color, size=80}) => {
-  const r = 28, circ = 2*Math.PI*r;
-  const fill = circ - (value/max)*circ;
-  return (
-    <svg width={size} height={size} viewBox="0 0 70 70">
-      <circle cx="35" cy="35" r={r} fill="none" stroke={C.dim} strokeWidth="4"/>
-      <circle cx="35" cy="35" r={r} fill="none" stroke={color} strokeWidth="4"
-        strokeDasharray={circ} strokeDashoffset={fill}
-        strokeLinecap="round" transform="rotate(-90 35 35)"
-        style={{transition:"stroke-dashoffset 1.2s cubic-bezier(.16,1,.3,1)"}}/>
-      <text x="35" y="38" textAnchor="middle" fill={color} fontSize="16" fontWeight="700" fontFamily="'Syne',sans-serif">{value}</text>
+const Ring=({v,max=10,color,size=76})=>{
+  const r=28,circ=2*Math.PI*r,off=circ-(v/max)*circ;
+  return(
+    <svg width={size} height={size} viewBox="0 0 76 76" style={{flexShrink:0}}>
+      <circle cx="38" cy="38" r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="4.5"/>
+      <circle cx="38" cy="38" r={r} fill="none" stroke={color} strokeWidth="4.5"
+        strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round"
+        transform="rotate(-90 38 38)" style={{transition:"stroke-dashoffset 1.3s cubic-bezier(.16,1,.3,1)"}}/>
+      <text x="38" y="43" textAnchor="middle" fill={color} fontSize="15" fontWeight="600" fontFamily="'Geist',sans-serif">{v}</text>
     </svg>
   );
 };
 
-const Bar = ({v, max=100, color}) => (
-  <div style={{height:4,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden",marginTop:8}}>
-    width:`${Math.min(100,(v/max)*100)}%`
+const Bar=({v,max=100,color})=>(
+  <div style={{height:3,background:"rgba(255,255,255,0.04)",borderRadius:2,overflow:"hidden",marginTop:8}}>
+    <div style={{height:"100%",borderRadius:2,background:color,width:`${Math.min(100,(v/max)*100)}%`,transition:"width 1.3s cubic-bezier(.16,1,.3,1)"}}/>
   </div>
 );
 
-function EmailTabs({emails}) {
-  const [tab,setTab] = useState(0);
-  const labels = ["J+1","J+3","J+7"];
-  const colors = [C.green, C.gold, C.blue];
-  if(!emails?.length) return null;
-  return (
+function Emails({emails}){
+  const [t,setT]=useState(0);
+  const [cp,setCp]=useState(false);
+  const tabs=[{l:"J+1",c:T.g},{l:"J+3",c:T.a},{l:"J+7",c:T.i}];
+  if(!emails?.length)return null;
+  const copy=()=>{navigator.clipboard.writeText(`${emails[t]?.sujet}\n\n${emails[t]?.corps}`);setCp(true);setTimeout(()=>setCp(false),2000);};
+  return(
     <div>
       <div style={{display:"flex",gap:4,marginBottom:16}}>
-        {labels.map((l,i) => (
-          <button key={i} onClick={()=>setTab(i)} style={{
-            background:tab===i?colors[i]:"transparent",
-            border:`1px solid ${tab===i?colors[i]:C.border}`,
-            color:tab===i?"#080810":C.muted,
-            padding:"6px 16px",borderRadius:6,fontSize:11,cursor:"pointer",
-            fontFamily:"'Syne',sans-serif",fontWeight:600,letterSpacing:"0.06em",
-            transition:"all .2s",
-          }}>{l}</button>
+        {tabs.map((tb,i)=>(
+          <button key={i} onClick={()=>setT(i)} className="tb" style={{
+            background:t===i?tb.c:"transparent",border:`1px solid ${t===i?tb.c:T.b}`,
+            color:t===i?"#05050A":T.t2,padding:"5px 16px",borderRadius:6,
+            fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:t===i?600:400,
+          }}>{tb.l}</button>
         ))}
       </div>
-      <div style={{border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
-        <div style={{padding:"12px 18px",borderBottom:`1px solid ${C.border}`,background:"rgba(0,0,0,0.3)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:13,fontWeight:600,color:colors[tab],fontFamily:"'Syne',sans-serif"}}>{emails[tab]?.sujet}</span>
-          <span style={{fontSize:10,color:C.muted,letterSpacing:"0.1em",textTransform:"uppercase"}}>{labels[tab]}</span>
+      <div style={{border:`1px solid ${T.b}`,borderRadius:10,overflow:"hidden",background:T.s2}}>
+        <div style={{padding:"12px 18px",borderBottom:`1px solid ${T.b}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:13,fontWeight:500,color:T.t1}}>{emails[t]?.sujet}</span>
+          <button onClick={copy} className="ch" style={{background:cp?T.gd:"transparent",border:`1px solid ${cp?T.gb:T.b}`,color:cp?T.g:T.t3,fontSize:11,padding:"4px 12px",borderRadius:5,cursor:"pointer",fontFamily:"inherit",fontWeight:500}}>
+            {cp?"✓ Copié":"Copier"}
+          </button>
         </div>
-        <div style={{padding:"18px",fontSize:12,lineHeight:1.9,color:"#B8B8D0",whiteSpace:"pre-wrap"}}>{emails[tab]?.corps}</div>
+        <div style={{padding:"18px",fontSize:13,lineHeight:1.85,color:T.t2,whiteSpace:"pre-wrap"}}>{emails[t]?.corps}</div>
       </div>
     </div>
   );
 }
 
-function Timeline({moments}) {
-  if(!moments?.length) return null;
-  const color = (d) => {
-    const dl = d.toLowerCase();
-    if(dl.includes("objection")||dl.includes("prix")||dl.includes("hésit")) return C.accent;
-    if(dl.includes("accord")||dl.includes("intérêt")||dl.includes("positif")||dl.includes("closing")) return C.green;
-    return C.gold;
-  };
-  return (
-    <div style={{position:"relative",paddingLeft:24}}>
-      <div style={{position:"absolute",left:9,top:6,bottom:6,width:"1px",background:`linear-gradient(to bottom, ${C.accent}, ${C.green})`}}/>
-      {moments.map((m,i) => (
-        <div key={i} style={{display:"flex",gap:16,marginBottom:20,position:"relative"}}>
-          <div style={{position:"absolute",left:-24,top:5,width:10,height:10,borderRadius:"50%",background:color(m.description),border:`2px solid ${C.s1}`,boxShadow:`0 0 8px ${color(m.description)}`}}/>
-          <div style={{minWidth:44,fontSize:10,color:C.muted,fontVariantNumeric:"tabular-nums",paddingTop:2,letterSpacing:"0.05em"}}>{m.time}</div>
-          <div style={{fontSize:12,color:"#C0C0DA",lineHeight:1.6}}>{m.description}</div>
+function TL({moments}){
+  if(!moments?.length)return null;
+  const col=(d)=>{const l=d.toLowerCase();return l.includes("objection")||l.includes("prix")||l.includes("refus")?T.r:l.includes("accord")||l.includes("intérêt")||l.includes("closing")?T.g:T.a;};
+  return(
+    <div style={{position:"relative",paddingLeft:26}}>
+      <div style={{position:"absolute",left:9,top:6,bottom:6,width:"1px",background:`linear-gradient(to bottom,${T.i},${T.g}40)`}}/>
+      {moments.map((m,i)=>(
+        <div key={i} style={{display:"flex",gap:14,marginBottom:20,position:"relative"}}>
+          <div style={{position:"absolute",left:-26,top:5,width:9,height:9,borderRadius:"50%",background:col(m.description),border:`1.5px solid ${T.s1}`,flexShrink:0}}/>
+          <div style={{minWidth:40,fontSize:11,color:T.t3,fontVariantNumeric:"tabular-nums",paddingTop:1,fontWeight:500}}>{m.time}</div>
+          <div style={{fontSize:13,color:T.t2,lineHeight:1.6}}>{m.description}</div>
         </div>
       ))}
     </div>
   );
 }
 
-function App() {
-  const [phase, setPhase] = useState("idle");
-  const [transcript, setTranscript] = useState("");
-  const [result, setResult] = useState(null);
-  const [errMsg, setErrMsg] = useState("");
-  const [audioBlob, setAudioBlob] = useState(null);
-  const [activeTab, setActiveTab] = useState("analyse");
-  const fileRef = useRef(null);
+function Loader(){
+  const [s,setS]=useState(0);
+  const steps=["Analyse de la transcription","Détection des signaux commerciaux","Génération de la séquence emails"];
+  React.useEffect(()=>{const t1=setTimeout(()=>setS(1),1400);const t2=setTimeout(()=>setS(2),3000);return()=>{clearTimeout(t1);clearTimeout(t2);};},[]);
+  return(
+    <div style={{display:"flex",justifyContent:"center",padding:"80px 0"}}>
+      <div style={{...c({padding:"40px 48px",minWidth:360,textAlign:"center"})}}>
+        <div style={{width:40,height:40,border:`1.5px solid ${T.i}`,borderTopColor:"transparent",borderRadius:"50%",animation:"spin .75s linear infinite",margin:"0 auto 28px"}}/>
+        <div style={{fontSize:15,fontWeight:500,marginBottom:6,color:T.t1}}>Analyse en cours</div>
+        <div style={{fontSize:13,color:T.t3,marginBottom:32}}>Traitement par IA avancée</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8,textAlign:"left"}}>
+          {steps.map((st,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:i<=s?T.id:"rgba(255,255,255,.02)",border:`1px solid ${i<=s?T.ib:T.b}`,borderRadius:8,transition:"all .4s ease"}}>
+              <div style={{width:16,height:16,borderRadius:"50%",background:i<s?T.g:i===s?T.i:"transparent",border:`1.5px solid ${i<s?T.g:i===s?T.i:T.b}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all .4s"}}>
+                {i<s&&<svg width="8" height="8" viewBox="0 0 8 8"><polyline points="1,4 3,6 7,2" fill="none" stroke="#05050A" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                {i===s&&<div style={{width:5,height:5,borderRadius:"50%",background:"#fff",animation:"pulse 1s ease infinite"}}/>}
+              </div>
+              <span style={{fontSize:12,color:i<=s?T.t1:T.t3,fontWeight:i<=s?500:400,transition:"color .4s"}}>{st}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  const onFile = (e) => {
-    const f = e.target.files[0];
-    if(!f) return;
-    setAudioBlob(f);
+function App(){
+  const [ph,setPh]=useState("idle");
+  const [tx,setTx]=useState("");
+  const [res,setRes]=useState(null);
+  const [err,setErr]=useState("");
+  const [ab,setAb]=useState(null);
+  const [tab,setTab]=useState("analyse");
+  const [drag,setDrag]=useState(false);
+  const fr=useRef(null);
+
+  const onFile=e=>{const f=e.target.files[0];if(f)setAb(f);};
+  const onDrop=e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(f?.type.startsWith("audio/"))setAb(f);};
+
+  const analyze=async()=>{
+    setPh("processing");
+    try{
+      const{transcription}=await fetch("/api/transcribe",{method:"POST"}).then(r=>r.json());
+      const analyse=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcription})}).then(r=>r.json());
+      const email=await fetch("/api/email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcription,analyse})}).then(r=>r.json());
+      setRes({transcription,analyse,email});
+      setPh("done");setTab("analyse");
+    }catch(e){setErr("Erreur de connexion.");setPh("err");}
   };
 
-  const analyze = async () => {
-    setPhase("processing");
-    try {
-      const {transcription} = await fetch("/api/transcribe",{method:"POST"}).then(r=>r.json());
-      const analyse = await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcription})}).then(r=>r.json());
-      const email = await fetch("/api/email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcription,analyse})}).then(r=>r.json());
-      setResult({transcription, analyse, email});
-      setPhase("done");
-      setActiveTab("analyse");
-    } catch(e) {
-      setErrMsg("Erreur de connexion. Réessayez.");
-      setPhase("err");
-    }
-  };
+  const reset=()=>{setPh("idle");setRes(null);setTx("");setAb(null);setErr("");};
+  const sc=(v,m=10)=>v/m>=.7?T.g:v/m>=.5?T.a:T.r;
+  const TABS=[{id:"analyse",l:"Analyse"},{id:"timeline",l:"Timeline"},{id:"emails",l:"Emails"},{id:"coaching",l:"Coaching"}];
 
-  const reset = () => {setPhase("idle");setResult(null);setTranscript("");setAudioBlob(null);setErrMsg("");};
-  const sc = (v,max=10) => v/max>=.7?C.green:v/max>=.5?C.gold:C.accent;
-
-  const TABS = [{id:"analyse",label:"Analyse"},{id:"timeline",label:"Timeline"},{id:"emails",label:"Emails"},{id:"coaching",label:"Coaching"}];
-
-  return (
-    <div style={{minHeight:"100vh",background:C.bg}}>
-      {/* Subtle grid background */}
-      <div style={{position:"fixed",inset:0,backgroundImage:`linear-gradient(${C.border} 1px,transparent 1px),linear-gradient(90deg,${C.border} 1px,transparent 1px)`,backgroundSize:"40px 40px",pointerEvents:"none",zIndex:0}}/>
-      {/* Accent glow */}
-      <div style={{position:"fixed",top:-200,right:-200,width:600,height:600,background:`radial-gradient(circle, ${C.accentDim} 0%, transparent 70%)`,pointerEvents:"none",zIndex:0}}/>
+  return(
+    <div style={{minHeight:"100vh",background:T.bg}}>
+      <style>{KF}</style>
+      <div style={{position:"fixed",inset:0,background:"radial-gradient(ellipse 60% 40% at 50% -10%,rgba(124,58,237,.08) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
 
       <div style={{position:"relative",zIndex:1}}>
-        {/* Header */}
-        <div style={{borderBottom:`1px solid ${C.border}`,padding:"16px 32px",display:"flex",alignItems:"center",gap:16,background:"rgba(8,8,16,0.8)",backdropFilter:"blur(12px)",position:"sticky",top:0,zIndex:20}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:36,height:36,borderRadius:8,background:C.accent,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-            </div>
-            <div>
-              <div style={{fontSize:14,fontWeight:800,letterSpacing:"0.04em",fontFamily:"'Syne',sans-serif",color:C.text}}>SALES COACH <span style={{color:C.accent}}>AI</span></div>
-              <div style={{fontSize:10,color:C.muted,letterSpacing:"0.08em"}}>ANALYSE D'APPELS COMMERCIAUX</div>
-            </div>
+        {/* Nav */}
+        <nav style={{height:56,borderBottom:`1px solid ${T.b}`,padding:"0 28px",display:"flex",alignItems:"center",gap:10,background:"rgba(5,5,10,.8)",backdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:20}}>
+          <div style={{width:26,height:26,borderRadius:6,background:T.ig,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
-          <div style={{marginLeft:"auto",display:"flex",gap:10,alignItems:"center"}}>
-            {phase!=="idle"&&phase!=="err"&&<button onClick={reset} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.muted,fontSize:10,padding:"6px 14px",borderRadius:6,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:600,letterSpacing:"0.08em",textTransform:"uppercase",transition:"all .2s"}}
-              onMouseOver={e=>{e.currentTarget.style.borderColor=C.borderHi;e.currentTarget.style.color=C.text}}
-              onMouseOut={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.muted}}>← Nouveau</button>}
-            <div style={{background:C.accentDim,border:`1px solid ${C.accentBorder}`,color:C.accent,fontSize:9,padding:"5px 12px",borderRadius:5,letterSpacing:"0.12em",textTransform:"uppercase",fontWeight:700,fontFamily:"'Syne',sans-serif"}}>PRO</div>
+          <span style={{fontSize:14,fontWeight:600,letterSpacing:"-0.01em",color:T.t1}}>SalesCoach</span>
+          <span style={{fontSize:10,background:T.id,border:`1px solid ${T.ib}`,color:T.i,padding:"2px 7px",borderRadius:4,fontWeight:600,letterSpacing:"0.08em"}}>PRO</span>
+          <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:12}}>
+            <span style={{fontSize:11,color:T.t3,display:"flex",alignItems:"center",gap:5}}>
+              <span style={{width:5,height:5,borderRadius:"50%",background:T.g,display:"inline-block"}}/>
+              Opérationnel
+            </span>
+            {ph!=="idle"&&ph!=="err"&&<button onClick={reset} className="ch" style={{background:"transparent",border:`1px solid ${T.b}`,color:T.t2,fontSize:11,padding:"5px 12px",borderRadius:6,cursor:"pointer",fontWeight:500}}>← Nouveau</button>}
           </div>
-        </div>
+        </nav>
 
-        <div style={{maxWidth:960,margin:"0 auto",padding:"40px 24px"}}>
+        <div style={{maxWidth:920,margin:"0 auto",padding:"52px 24px"}}>
 
           {/* IDLE */}
-          {phase==="idle"&&(
+          {ph==="idle"&&(
             <div>
-              <div className="fu" style={{marginBottom:48,textAlign:"center"}}>
-                <div style={{fontSize:11,color:C.accent,letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:16,fontFamily:"'Syne',sans-serif",fontWeight:600}}>● LIVE DEMO</div>
-                <h1 style={{fontSize:48,fontWeight:800,fontFamily:"'Syne',sans-serif",lineHeight:1.1,marginBottom:16}}>
-                  Analysez vos appels<br/><span style={{color:C.accent}}>en secondes.</span>
+              <div className="a1" style={{marginBottom:52}}>
+                <div style={{display:"inline-flex",alignItems:"center",gap:7,background:T.id,border:`1px solid ${T.ib}`,borderRadius:20,padding:"5px 14px",marginBottom:20}}>
+                  <span style={{width:5,height:5,borderRadius:"50%",background:T.i,animation:"pulse 2s ease infinite"}}/>
+                  <span style={{fontSize:11,color:T.i,fontWeight:500,letterSpacing:"0.08em"}}>SALES INTELLIGENCE</span>
+                </div>
+                <h1 style={{fontSize:46,fontWeight:700,lineHeight:1.1,letterSpacing:"-0.03em",color:T.t1,marginBottom:16,maxWidth:560}}>
+                  Analysez chaque appel.<br/>
+                  <span style={{background:"linear-gradient(135deg,#7C3AED,#4F46E5)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Closez plus.</span>
                 </h1>
-                <p style={{fontSize:14,color:C.muted,maxWidth:480,margin:"0 auto",lineHeight:1.7}}>Score, objections, timeline, coaching personnalisé et séquence email — générés automatiquement.</p>
+                <p style={{fontSize:15,color:T.t2,lineHeight:1.7,maxWidth:440,fontWeight:300}}>Score, objections, coaching expert et séquence emails — en quelques secondes.</p>
               </div>
 
-              <div className="fu2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:24}}>
-                <button onClick={()=>fileRef.current?.click()} style={{...card({cursor:"pointer",textAlign:"center",padding:"28px 24px",border:`1px solid ${C.border}`,background:C.s2,display:"block",width:"100%",fontFamily:"'DM Mono',monospace",color:C.text,transition:"all .2s"}),}}
-                  onMouseOver={e=>{e.currentTarget.style.borderColor=C.accentBorder;e.currentTarget.style.background=C.s3}}
-                  onMouseOut={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background=C.s2}}>
-                  <div style={{fontSize:28,marginBottom:10}}>📁</div>
-                  <div style={{fontSize:13,fontWeight:600,fontFamily:"'Syne',sans-serif",marginBottom:4}}>Uploader un audio</div>
-                  <div style={{fontSize:11,color:C.muted}}>MP3, WAV, M4A, WEBM</div>
-                </button>
-                <div style={{...card({background:C.s2,padding:"28px 24px"})}}>
-                  <div style={{fontSize:11,color:C.muted,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:10,fontFamily:"'Syne',sans-serif",fontWeight:600}}>Ou coller la transcription</div>
-                  <textarea value={transcript} onChange={e=>setTranscript(e.target.value)}
-                    placeholder="Collez ici la transcription de l'appel..."
-                    style={{width:"100%",minHeight:80,background:"rgba(0,0,0,0.3)",border:`1px solid ${C.border}`,borderRadius:8,color:C.text,padding:"12px 14px",fontSize:12,fontFamily:"'DM Mono',monospace",resize:"none",outline:"none",lineHeight:1.7,boxSizing:"border-box"}}
-                    onFocus={e=>e.target.style.borderColor=C.borderHi}
-                    onBlur={e=>e.target.style.borderColor=C.border}
+              <div className="a2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+                <div className="ch"
+                  onClick={()=>fr.current?.click()}
+                  onDragOver={e=>{e.preventDefault();setDrag(true);}}
+                  onDragLeave={()=>setDrag(false)}
+                  onDrop={onDrop}
+                  style={{...c({cursor:"pointer",textAlign:"center",padding:"32px 24px",border:`1px solid ${drag?T.ib:ab?T.gb:T.b}`,background:drag?T.id:ab?T.gd:"transparent",minHeight:160,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10})}}
+                >
+                  <div style={{width:40,height:40,borderRadius:10,background:ab?T.gd:T.id,border:`1px solid ${ab?T.gb:T.ib}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ab?T.g:T.i} strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </div>
+                  <div style={{fontSize:13,fontWeight:500,color:ab?T.g:T.t1}}>{ab?ab.name:"Uploader un audio"}</div>
+                  <div style={{fontSize:12,color:T.t3}}>{ab?"Fichier chargé":"Glissez ou cliquez · MP3, WAV, M4A"}</div>
+                </div>
+
+                <div className="ch" style={c({padding:"24px",minHeight:160})}>
+                  <div style={{fontSize:11,color:T.t3,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:10,fontWeight:500}}>Transcription</div>
+                  <textarea value={tx} onChange={e=>setTx(e.target.value)}
+                    placeholder="Collez la transcription de l'appel..."
+                    style={{width:"100%",height:90,background:"transparent",border:"none",color:T.t1,padding:0,fontSize:13,fontFamily:"inherit",resize:"none",outline:"none",lineHeight:1.7,boxSizing:"border-box"}}
                   />
                 </div>
               </div>
-              <input ref={fileRef} type="file" accept="audio/*" style={{display:"none"}} onChange={onFile}/>
+              <input ref={fr} type="file" accept="audio/*" style={{display:"none"}} onChange={onFile}/>
 
-              {(audioBlob||transcript.trim())&&(
-                <div className="fu3" style={{textAlign:"center"}}>
-                  {audioBlob&&<div style={{fontSize:12,color:C.green,marginBottom:12}}>✓ {audioBlob.name} chargé</div>}
-                  <button onClick={analyze} style={{
-                    background:C.accent,color:"#fff",border:"none",
-                    padding:"14px 40px",borderRadius:8,fontSize:13,fontWeight:700,
-                    cursor:"pointer",letterSpacing:"0.08em",textTransform:"uppercase",
-                    fontFamily:"'Syne',sans-serif",transition:"all .2s",
-                    boxShadow:`0 8px 32px ${C.accentDim}`,
-                  }}
-                    onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"}
-                    onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}
-                  >⚡ Analyser l'appel</button>
+              {(ab||tx.trim())&&(
+                <div className="a3" style={{marginBottom:40}}>
+                  <button onClick={analyze} className="ch" style={{
+                    background:T.ig,color:"#fff",border:"none",
+                    padding:"12px 36px",borderRadius:8,fontSize:13,fontWeight:500,
+                    cursor:"pointer",letterSpacing:"0.02em",fontFamily:"inherit",
+                    boxShadow:"0 4px 24px rgba(124,58,237,.3)",
+                  }}>Analyser l'appel →</button>
                 </div>
               )}
 
-              {/* Feature pills */}
-              <div className="fu4" style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginTop:40}}>
-                {["Score /10","Timeline","3 Emails","Coaching IA","Objections","Closing %"].map((f,i)=>(
-                  <span key={i} style={{fontSize:11,padding:"6px 14px",background:C.s2,border:`1px solid ${C.border}`,color:C.muted,borderRadius:20,fontFamily:"'DM Mono',monospace"}}>{f}</span>
+              <div className="a4" style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {["Score /10","Closing %","Objections","Points forts","3 Emails","Coaching","Timeline"].map((f,i)=>(
+                  <span key={i} style={{fontSize:11.5,padding:"5px 13px",background:"transparent",border:`1px solid ${T.b}`,color:T.t3,borderRadius:6,fontWeight:400}}>{f}</span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* PROCESSING */}
-          {phase==="processing"&&(
-            <div style={{textAlign:"center",padding:"80px 0"}}>
-              <div style={{...card({display:"inline-block",padding:"48px 64px",minWidth:320})}}>
-                <div style={{width:48,height:48,border:`2px solid ${C.accent}`,borderTopColor:"transparent",borderRadius:"50%",animation:"spin .8s linear infinite",margin:"0 auto 24px"}}/>
-                <div style={{fontSize:16,fontWeight:700,fontFamily:"'Syne',sans-serif",marginBottom:8}}>Analyse en cours…</div>
-                <div style={{fontSize:11,color:C.muted,letterSpacing:"0.1em",textTransform:"uppercase"}}>Score · Timeline · Emails · Coaching</div>
+          {ph==="processing"&&<Loader/>}
+
+          {ph==="err"&&(
+            <div className="a1" style={{display:"flex",justifyContent:"center",padding:"80px 0"}}>
+              <div style={{...c({padding:"36px 44px",textAlign:"center",maxWidth:360,borderColor:T.rb})}}>
+                <div style={{fontSize:13,color:T.r,marginBottom:16,fontWeight:500}}>{err}</div>
+                <button onClick={reset} style={{background:T.ig,color:"#fff",border:"none",padding:"9px 24px",borderRadius:7,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:500}}>Réessayer</button>
               </div>
             </div>
           )}
 
-          {/* ERROR */}
-          {phase==="err"&&(
-            <div style={{...card({borderColor:C.accentBorder,maxWidth:400,margin:"80px auto",padding:"32px",textAlign:"center"})}}>
-              <div style={{fontSize:24,marginBottom:16}}>⚠️</div>
-              <div style={{color:C.accent,fontSize:13,marginBottom:20,fontFamily:"'Syne',sans-serif",fontWeight:600}}>{errMsg}</div>
-              <button onClick={reset} style={{background:C.accent,color:"#fff",border:"none",padding:"10px 24px",borderRadius:6,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Syne',sans-serif"}}>Réessayer</button>
-            </div>
-          )}
-
-          {/* RESULTS */}
-          {phase==="done"&&result&&(
+          {ph==="done"&&res&&(
             <div>
-              {/* KPI cards */}
-              <div className="fu" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16,marginBottom:24}}>
-                <div style={card()}>
+              <div className="a1" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
+                <div className="ch" style={c()}>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                    <div>
-                      <div style={{fontSize:10,color:C.muted,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:8,fontFamily:"'Syne',sans-serif",fontWeight:600}}>Score d'appel</div>
-                      <div style={{fontSize:36,fontWeight:800,color:sc(result.analyse.score),fontFamily:"'Syne',sans-serif",lineHeight:1}}>{result.analyse.score}<span style={{fontSize:14,color:C.dim}}>/10</span></div>
-                      <Bar v={result.analyse.score} max={10} color={sc(result.analyse.score)}/>
-                      <div style={{fontSize:11,color:C.muted,marginTop:10,lineHeight:1.5}}>{result.analyse.score_justification}</div>
+                    <div style={{flex:1,marginRight:16}}>
+                      <div style={{fontSize:10,color:T.t3,letterSpacing:"0.13em",textTransform:"uppercase",marginBottom:10,fontWeight:500}}>Score</div>
+                      <div style={{fontSize:38,fontWeight:700,color:sc(res.analyse.score),lineHeight:1,letterSpacing:"-0.02em"}}>{res.analyse.score}<span style={{fontSize:14,color:T.t3,fontWeight:400}}>/10</span></div>
+                      <Bar v={res.analyse.score} max={10} color={sc(res.analyse.score)}/>
+                      <div style={{fontSize:12,color:T.t2,marginTop:9,lineHeight:1.5}}>{res.analyse.score_justification}</div>
                     </div>
-                    <ScoreRing value={result.analyse.score} max={10} color={sc(result.analyse.score)}/>
+                    <Ring v={res.analyse.score} max={10} color={sc(res.analyse.score)}/>
                   </div>
                 </div>
-                <div style={card()}>
-                  <div style={{fontSize:10,color:C.muted,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:8,fontFamily:"'Syne',sans-serif",fontWeight:600}}>Probabilité closing</div>
-                  <div style={{fontSize:36,fontWeight:800,color:sc(result.analyse.probabilite_closing,100),fontFamily:"'Syne',sans-serif",lineHeight:1}}>{result.analyse.probabilite_closing}<span style={{fontSize:14,color:C.dim}}>%</span></div>
-                  <Bar v={result.analyse.probabilite_closing} max={100} color={sc(result.analyse.probabilite_closing,100)}/>
-                  <div style={{fontSize:11,color:C.muted,marginTop:10,lineHeight:1.5}}>{result.analyse.proba_justification}</div>
+                <div className="ch" style={c()}>
+                  <div style={{fontSize:10,color:T.t3,letterSpacing:"0.13em",textTransform:"uppercase",marginBottom:10,fontWeight:500}}>Closing</div>
+                  <div style={{fontSize:38,fontWeight:700,color:sc(res.analyse.probabilite_closing,100),lineHeight:1,letterSpacing:"-0.02em"}}>{res.analyse.probabilite_closing}<span style={{fontSize:14,color:T.t3,fontWeight:400}}>%</span></div>
+                  <Bar v={res.analyse.probabilite_closing} max={100} color={sc(res.analyse.probabilite_closing,100)}/>
+                  <div style={{fontSize:12,color:T.t2,marginTop:9,lineHeight:1.5}}>{res.analyse.proba_justification}</div>
                 </div>
-                <div style={card()}>
-                  <div style={{fontSize:10,color:C.muted,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:8,fontFamily:"'Syne',sans-serif",fontWeight:600}}>Objections</div>
-                  <div style={{fontSize:36,fontWeight:800,color:C.gold,fontFamily:"'Syne',sans-serif",lineHeight:1}}>{(result.analyse.objections||[]).length}<span style={{fontSize:14,color:C.dim}}> détectées</span></div>
-                  <div style={{marginTop:14}}>
-                    {(result.analyse.objections||[]).map((o,i)=><Tag key={i} color={C.accent} bg={C.accentDim} border={C.accentBorder}>{o}</Tag>)}
+                <div className="ch" style={c()}>
+                  <div style={{fontSize:10,color:T.t3,letterSpacing:"0.13em",textTransform:"uppercase",marginBottom:10,fontWeight:500}}>Objections</div>
+                  <div style={{fontSize:38,fontWeight:700,color:T.a,lineHeight:1,letterSpacing:"-0.02em"}}>{(res.analyse.objections||[]).length}<span style={{fontSize:14,color:T.t3,fontWeight:400}}> {(res.analyse.objections||[]).length>1?"détectées":"détectée"}</span></div>
+                  <div style={{marginTop:12}}>
+                    {(res.analyse.objections||[]).slice(0,2).map((o,i)=><Pip key={i} color={T.r} bg={T.rd} bd={T.rb}>{o}</Pip>)}
                   </div>
                 </div>
               </div>
 
-              {/* Tabs */}
-              <div className="fu2" style={{display:"flex",gap:0,marginBottom:20,borderBottom:`1px solid ${C.border}`}}>
+              <div className="a2" style={{display:"flex",borderBottom:`1px solid ${T.b}`,marginBottom:16}}>
                 {TABS.map(t=>(
-                  <button key={t.id} onClick={()=>setActiveTab(t.id)} style={{
+                  <button key={t.id} onClick={()=>setTab(t.id)} className="tb" style={{
                     background:"transparent",border:"none",
-                    borderBottom:`2px solid ${activeTab===t.id?C.accent:"transparent"}`,
-                    color:activeTab===t.id?C.text:C.muted,
-                    fontSize:12,padding:"10px 20px",cursor:"pointer",
-                    fontFamily:"'Syne',sans-serif",fontWeight:activeTab===t.id?700:400,
-                    letterSpacing:"0.06em",textTransform:"uppercase",
-                    transition:"all .15s",marginBottom:-1,
-                  }}>{t.label}</button>
+                    borderBottom:`1.5px solid ${tab===t.id?T.i:"transparent"}`,
+                    color:tab===t.id?T.t1:T.t3,
+                    fontSize:13,padding:"10px 20px",cursor:"pointer",
+                    fontFamily:"inherit",fontWeight:tab===t.id?500:400,
+                    marginBottom:-1,
+                  }}>{t.l}</button>
                 ))}
               </div>
 
-              {activeTab==="analyse"&&(
-                <div className="fu">
-                  <div style={{...card({marginBottom:16})}}>
-                    <SH>Résumé de l'appel</SH>
-                    <p style={{fontSize:13,color:"#C0C0DA",lineHeight:1.85}}>{result.analyse.resume}</p>
+              {tab==="analyse"&&(
+                <div className="ai">
+                  <div className="ch" style={{...c({marginBottom:12})}}>
+                    <Div label="Résumé" accent/>
+                    <p style={{fontSize:14,color:T.t2,lineHeight:1.85,fontWeight:300}}>{res.analyse.resume}</p>
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-                    <div style={card()}>
-                      <SH>Objections détectées</SH>
-                      {(result.analyse.objections||[]).map((o,i)=><Tag key={i} color={C.accent} bg={C.accentDim} border={C.accentBorder}>{o}</Tag>)}
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div className="ch" style={c()}>
+                      <Div label="Objections" accent/>
+                      {(res.analyse.objections||[]).map((o,i)=><Pip key={i} color={T.r} bg={T.rd} bd={T.rb}>⚠ {o}</Pip>)}
                     </div>
-                    <div style={card()}>
-                      <SH>Points forts</SH>
-                      {(result.analyse.points_forts||[]).map((p,i)=><Tag key={i} color={C.green} bg={C.greenDim} border={C.greenBorder}>{p}</Tag>)}
+                    <div className="ch" style={c()}>
+                      <Div label="Points forts" accent/>
+                      {(res.analyse.points_forts||[]).map((p,i)=><Pip key={i} color={T.g} bg={T.gd} bd={T.gb}>✓ {p}</Pip>)}
                     </div>
                   </div>
                 </div>
               )}
 
-              {activeTab==="timeline"&&(
-                <div className="fu" style={card()}>
-                  <SH>Moments clés de l'appel</SH>
-                  <Timeline moments={result.analyse.moments}/>
+              {tab==="timeline"&&(
+                <div className="ch ai" style={c()}>
+                  <Div label="Moments clés" accent/>
+                  <TL moments={res.analyse.moments}/>
                 </div>
               )}
 
-              {activeTab==="emails"&&(
-                <div className="fu" style={card()}>
-                  <SH>Séquence de relance</SH>
-                  <EmailTabs emails={result.analyse.emails}/>
+              {tab==="emails"&&(
+                <div className="ch ai" style={c()}>
+                  <Div label="Séquence de relance" accent/>
+                  <Emails emails={res.analyse.emails}/>
                 </div>
               )}
 
-              {activeTab==="coaching"&&(
-                <div className="fu">
-                  <div style={{...card({borderColor:C.goldBorder,marginBottom:16})}}>
-                    <SH>Coaching personnalisé</SH>
-                    <p style={{fontSize:13,color:"#C0C0DA",lineHeight:1.9}}>{result.analyse.coaching}</p>
+              {tab==="coaching"&&(
+                <div className="ai">
+                  <div className="ch" style={{...c({marginBottom:12,borderColor:T.ib,background:T.id})}}>
+                    <Div label="Coaching" accent/>
+                    <p style={{fontSize:14,color:T.t2,lineHeight:1.9,fontWeight:300}}>{res.analyse.coaching}</p>
                   </div>
-                  <div style={card()}>
-                    <SH>Transcription</SH>
-                    <div style={{fontSize:12,color:C.muted,lineHeight:1.8,maxHeight:240,overflow:"auto",whiteSpace:"pre-wrap"}}>{result.transcription}</div>
+                  <div className="ch" style={c()}>
+                    <Div label="Transcription"/>
+                    <div style={{fontSize:12.5,color:T.t3,lineHeight:1.8,maxHeight:240,overflow:"auto",whiteSpace:"pre-wrap"}}>{res.transcription}</div>
                   </div>
                 </div>
               )}
             </div>
           )}
+        </div>
+
+        <div style={{borderTop:`1px solid ${T.b}`,padding:"16px 28px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:11,color:T.t3}}>SalesCoach AI</span>
+          <span style={{fontSize:11,color:T.t3,display:"flex",alignItems:"center",gap:6}}><span style={{width:4,height:4,borderRadius:"50%",background:T.g,display:"inline-block"}}/>Tous systèmes opérationnels</span>
         </div>
       </div>
     </div>
