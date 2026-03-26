@@ -4,12 +4,11 @@ import ReactDOM from "react-dom/client";
 const KF = `
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#05050A;color:#ECECF1;font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:'ss01','ss02'}
+body{background:#05050A;color:#ECECF1;font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fi{from{opacity:0}to{opacity:1}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes dash{to{stroke-dashoffset:0}}
 .a1{animation:fu .5s cubic-bezier(.16,1,.3,1) both}
 .a2{animation:fu .5s .08s cubic-bezier(.16,1,.3,1) both}
 .a3{animation:fu .5s .16s cubic-bezier(.16,1,.3,1) both}
@@ -21,34 +20,20 @@ body{background:#05050A;color:#ECECF1;font-family:'Geist',system-ui,sans-serif;-
 `;
 
 const T = {
-  bg:"#05050A",
-  s1:"#0A0A12",
-  s2:"#0F0F18",
-  b:"rgba(255,255,255,0.055)",
-  bm:"rgba(255,255,255,0.09)",
-  bh:"rgba(255,255,255,0.15)",
-  i:"#7C3AED",
-  ig:"linear-gradient(135deg,#7C3AED 0%,#5B21B6 100%)",
-  id:"rgba(124,58,237,0.1)",
-  ib:"rgba(124,58,237,0.25)",
-  g:"#059669",
-  gd:"rgba(5,150,105,0.1)",
-  gb:"rgba(5,150,105,0.22)",
-  a:"#D97706",
-  ad:"rgba(217,119,6,0.1)",
-  ab:"rgba(217,119,6,0.22)",
-  r:"#DC2626",
-  rd:"rgba(220,38,38,0.08)",
-  rb:"rgba(220,38,38,0.2)",
-  t1:"#ECECF1",
-  t2:"#9090A0",
-  t3:"#50505F",
+  bg:"#05050A", s1:"#0A0A12", s2:"#0F0F18",
+  b:"rgba(255,255,255,0.055)", bm:"rgba(255,255,255,0.09)", bh:"rgba(255,255,255,0.15)",
+  i:"#7C3AED", ig:"linear-gradient(135deg,#7C3AED 0%,#5B21B6 100%)",
+  id:"rgba(124,58,237,0.1)", ib:"rgba(124,58,237,0.25)",
+  g:"#059669", gd:"rgba(5,150,105,0.1)", gb:"rgba(5,150,105,0.22)",
+  a:"#D97706", ad:"rgba(217,119,6,0.1)", ab:"rgba(217,119,6,0.22)",
+  r:"#DC2626", rd:"rgba(220,38,38,0.08)", rb:"rgba(220,38,38,0.2)",
+  t1:"#ECECF1", t2:"#9090A0", t3:"#50505F",
 };
 
 const c=(x={})=>({background:T.s1,border:`1px solid ${T.b}`,borderRadius:12,padding:"22px 26px",...x});
 
 const Pip=({color,bg,bd,children})=>(
-  <span className="ch" style={{display:"inline-flex",alignItems:"center",fontSize:11.5,padding:"3px 10px",background:bg,border:`1px solid ${bd}`,color,borderRadius:6,marginRight:7,marginBottom:7,fontWeight:500,letterSpacing:"0.01em",cursor:"default"}}>{children}</span>
+  <span className="ch" style={{display:"inline-flex",alignItems:"center",fontSize:11.5,padding:"3px 10px",background:bg,border:`1px solid ${bd}`,color,borderRadius:6,marginRight:7,marginBottom:7,fontWeight:500,cursor:"default"}}>{children}</span>
 );
 
 const Div=({label,accent=false})=>(
@@ -167,7 +152,7 @@ function App(){
   const analyze=async()=>{
     setPh("processing");
     try{
-      const{transcription}=await fetch("/api/transcribe",{method:"POST"}).then(r=>r.json());
+      const{transcription}=await fetch("/api/transcribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcription:tx||""})}).then(r=>r.json());
       const analyse=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcription})}).then(r=>r.json());
       const email=await fetch("/api/email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcription,analyse})}).then(r=>r.json());
       setRes({transcription,analyse,email});
@@ -185,7 +170,6 @@ function App(){
       <div style={{position:"fixed",inset:0,background:"radial-gradient(ellipse 60% 40% at 50% -10%,rgba(124,58,237,.08) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
 
       <div style={{position:"relative",zIndex:1}}>
-        {/* Nav */}
         <nav style={{height:56,borderBottom:`1px solid ${T.b}`,padding:"0 28px",display:"flex",alignItems:"center",gap:10,background:"rgba(5,5,10,.8)",backdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:20}}>
           <div style={{width:26,height:26,borderRadius:6,background:T.ig,display:"flex",alignItems:"center",justifyContent:"center"}}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -203,7 +187,6 @@ function App(){
 
         <div style={{maxWidth:920,margin:"0 auto",padding:"52px 24px"}}>
 
-          {/* IDLE */}
           {ph==="idle"&&(
             <div>
               <div className="a1" style={{marginBottom:52}}>
@@ -355,7 +338,7 @@ function App(){
                     <p style={{fontSize:14,color:T.t2,lineHeight:1.9,fontWeight:300}}>{res.analyse.coaching}</p>
                   </div>
                   <div className="ch" style={c()}>
-                    <Div label="Transcription"/>
+                    <Div label="Transcription complète" />
                     <div style={{fontSize:12.5,color:T.t3,lineHeight:1.8,maxHeight:240,overflow:"auto",whiteSpace:"pre-wrap"}}>{res.transcription}</div>
                   </div>
                 </div>
