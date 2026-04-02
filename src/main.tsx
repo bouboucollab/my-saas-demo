@@ -611,8 +611,7 @@ function App(){
                   <div style={{width:40,height:40,borderRadius:10,background:ab?C.greenL:C.navyL,display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ab?C.green:C.navy} strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                   </div>
-                  <div style={{fontSize:13,fontWei
-                  ght:300}}>{res.analyse.proba_justification}</div>
+                 <div style={{fontSize:11,color:C.ink3,marginTop:8,lineHeight:1.5}}>{res.analyse.proba_justification}</div>
                   </div>
                 </div>
               </div>
